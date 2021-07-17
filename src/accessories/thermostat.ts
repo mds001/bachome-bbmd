@@ -4,7 +4,6 @@ import {PlatformAccessory, Service} from 'homebridge';
 import {ExampleHomebridgePlatform} from '../platform';
 import {objectStringParser} from '../bacnet/parser';
 import {readBACNetValue, writeBACNetValue} from '../bacnet/bacnet';
-import {CurrentHeatingCoolingState, TargetHeatingCoolingState} from 'hap-nodejs/dist/lib/definitions/CharacteristicDefinitions';
 
 /**
  * Platform Accessory
@@ -92,16 +91,16 @@ export class BachomeThermostatAccessory {
     this.Poll(this.updateTargetTemperature.bind(this), this.accessory.context.device.pollFrequency * 1000);
 
     this.mapStates = new Map();
-    this.mapStates.set(this.accessory.context.device.targetHeatOnlyStateValue, TargetHeatingCoolingState.HEAT);
-    this.mapStates.set(this.accessory.context.device.targetCoolOnlyStateValue, TargetHeatingCoolingState.COOL);
-    this.mapStates.set(this.accessory.context.device.targetAutoStateValue, TargetHeatingCoolingState.AUTO);
-    this.mapStates.set(this.accessory.context.device.targetOffStateValue, TargetHeatingCoolingState.OFF);
+    this.mapStates.set(this.accessory.context.device.targetHeatOnlyStateValue, this.platform.Characteristic.TargetHeatingCoolingState.HEAT);
+    this.mapStates.set(this.accessory.context.device.targetCoolOnlyStateValue, this.platform.Characteristic.TargetHeatingCoolingState.COOL);
+    this.mapStates.set(this.accessory.context.device.targetAutoStateValue, this.platform.Characteristic.TargetHeatingCoolingState.AUTO);
+    this.mapStates.set(this.accessory.context.device.targetOffStateValue, this.platform.Characteristic.TargetHeatingCoolingState.OFF);
 
     this.reverseMapStates = new Map();
-    this.reverseMapStates.set(TargetHeatingCoolingState.HEAT, this.accessory.context.device.targetHeatOnlyStateValue);
-    this.reverseMapStates.set(TargetHeatingCoolingState.COOL, this.accessory.context.device.targetCoolOnlyStateValue);
-    this.reverseMapStates.set(TargetHeatingCoolingState.AUTO, this.accessory.context.device.targetAutoStateValue);
-    this.reverseMapStates.set(TargetHeatingCoolingState.OFF, this.accessory.context.device.targetOffStateValue);
+    this.reverseMapStates.set(this.platform.Characteristic.TargetHeatingCoolingState.HEAT, this.accessory.context.device.targetHeatOnlyStateValue);
+    this.reverseMapStates.set(this.platform.Characteristic.TargetHeatingCoolingState.COOL, this.accessory.context.device.targetCoolOnlyStateValue);
+    this.reverseMapStates.set(this.platform.Characteristic.TargetHeatingCoolingState.AUTO, this.accessory.context.device.targetAutoStateValue);
+    this.reverseMapStates.set(this.platform.Characteristic.TargetHeatingCoolingState.OFF, this.accessory.context.device.targetOffStateValue);
   }
 
   /**
@@ -139,11 +138,11 @@ export class BachomeThermostatAccessory {
     this.platform.log.info(`Read currentHeatingCoolingState: Heat: ${String(valueHeat)}, Cool: ${String(valueCool)}`);
 
     if (Number(valueHeat) > 0) {
-      this.internalStates.currentHeatingCoolingState = CurrentHeatingCoolingState.HEAT;
+      this.internalStates.currentHeatingCoolingState = this.platform.Characteristic.TargetHeatingCoolingState.HEAT;
     } else if (Number(valueCool) > 0) {
-      this.internalStates.currentHeatingCoolingState = CurrentHeatingCoolingState.COOL;
+      this.internalStates.currentHeatingCoolingState = this.platform.Characteristic.TargetHeatingCoolingState.COOL;
     } else {
-      this.internalStates.currentHeatingCoolingState = CurrentHeatingCoolingState.OFF;
+      this.internalStates.currentHeatingCoolingState = this.platform.Characteristic.TargetHeatingCoolingState.OFF;
     }
 
     this.platform.log.info(`currentHeatingCoolingState: ${String(this.internalStates.currentHeatingCoolingState)}`);
