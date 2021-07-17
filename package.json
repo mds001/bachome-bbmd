@@ -2,7 +2,7 @@
   "private": false,
   "displayName": "BAChome BBMD",
   "name": "homebridge-bachome-bbmd",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Connect BACNet temperature control devices via homebridge",
   "license": "Apache-2.0",
   "repository": {
