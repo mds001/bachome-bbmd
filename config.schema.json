@@ -1,0 +1,159 @@
+{
+    "pluginAlias": "bachome-bbmd",
+    "pluginType": "platform",
+    "singular": true,
+    "schema": {
+        "type": "object",
+        "properties": {
+            "name": {
+                "title": "Name",
+                "type": "string",
+                "required": true,
+                "default": "BAChome BBMD"
+            },
+            "thermostat": {
+                "title": "Thermostats",
+                "type": "array",
+                "items": {
+                    "title": "Thermostat",
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "title": "Name",
+                            "type": "string",
+                            "placeholder": "e.g. Kitchen",
+                            "required": true
+                        },
+                        "manufacturer": {
+                            "title": "Manufacturer",
+                            "type": "string",
+                            "default": "Manufacturer Name",
+                            "required": true
+                        },
+                        "model": {
+                            "title": "Model",
+                            "type": "string",
+                            "default": "Model Name",
+                            "required": true
+                        },
+                        "serial": {
+                            "title": "Serial number",
+                            "type": "string",
+                            "required": true,
+                            "placeholder": "bachome-bbmd-thermostat-001",
+                            "description": "Must be unique in this configuration"
+                        },
+                        "ipAddress": {
+                            "title": "IP Address",
+                            "type": "string",
+                            "required": true,
+                            "placeholder": "10.10.14.30"
+                        },
+                        "net": {
+                            "title": "Net Address",
+                            "type": "number",
+                            "required": true,
+                            "placeholder": -1,
+                            "description": "If set, then adr must also be set, and will use BBMD"
+                        },
+                        "adr": {
+                            "title": "MAC Address",
+                            "type": "number",
+                            "required": true,
+                            "placeholder": -1,
+                            "description": "If set, then net must also be set, and will use BBMD"
+                        },
+                        "currentHeatingState": {
+                            "title": "Current Heating State Object",
+                            "type": "string",
+                            "required": true,
+                            "placeholder": "BO:1"
+                        },
+                        "currentCoolingState": {
+                            "title": "Current Cooling State Object",
+                            "type": "string",
+                            "required": true,
+                            "placeholder": "AO:3"
+                        },
+                        "targetHeatingCoolingState": {
+                            "title": "Target State Object",
+                            "type": "string",
+                            "required": true,
+                            "placeholder": "MSV:618",
+                            "description": "Must be a writeable BACnet object"
+                        },
+                        "currentTemperature": {
+                            "title": "Current Temperature Object",
+                            "type": "string",
+                            "required": true,
+                            "placeholder": "AI:700"
+                        },
+                        "targetTemperature": {
+                            "title": "Target Temperature Object",
+                            "type": "string",
+                            "required": true,
+                            "placeholder": "AV:300",
+                            "description": "Must be a writeable BACnet object"
+                        },
+                        "minTemp": {
+                            "title": "Min Temp",
+                            "type": "number",
+                            "required": true,
+                            "placeholder": 18,
+                            "description": "min allowed temp"
+                        },
+                        "maxTemp": {
+                            "title": "Max Temp",
+                            "type": "number",
+                            "required": true,
+                            "placeholder": 30,
+                            "description": "max allowed temp"
+                        },
+                        "minStep": {
+                            "title": "Min Step",
+                            "type": "number",
+                            "required": true,
+                            "placeholder": 0.5,
+                            "description": "min allowed temp step"
+                        },
+                        "pollFrequency": {
+                            "title": "Polling Frequency",
+                            "type": "number",
+                            "required": true,
+                            "placeholder": 5,
+                            "description": "update status this frequently, seconds"
+                        },
+                        "targetHeatOnlyStateValue": {
+                            "title": "Heat Only State Value",
+                            "type": "number",
+                            "required": true,
+                            "placeholder": 1,
+                            "description": "the value stored by the BACNet device in targetHeatingCoolingState"
+                        },
+                        "targetCoolOnlyStateValue": {
+                            "title": "Cool Only State Value",
+                            "type": "number",
+                            "required": true,
+                            "placeholder": 4,
+                            "description": "the value stored by the BACNet device in targetHeatingCoolingState"
+                        },
+                        "targetAutoStateValue": {
+                            "title": "Auto State Value",
+                            "type": "number",
+                            "required": true,
+                            "placeholder": 3,
+                            "description": "the value stored by the BACNet device in targetHeatingCoolingState"
+                        },
+                        "targetOffStateValue": {
+                            "title": "Off State Value",
+                            "type": "number",
+                            "required": true,
+                            "placeholder": 2,
+                            "description": "the value stored by the BACNet device in targetHeatingCoolingState"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
