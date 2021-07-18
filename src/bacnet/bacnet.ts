@@ -1,15 +1,15 @@
 import bacnet from 'natezimmer_bacstack';
+import {ExampleHomebridgePlatform} from "../platform";
 
 const client = new bacnet({apduTimeout: 6000});
 
-client.whoIs({'address':{'net':0xFFFF, 'ip':'10.10.14.30'}});
-
 // eslint-disable-next-line @typescript-eslint/ban-types
-export function readBACNetValue(ipAddress: string, net: number, adr: number, propertyObject:object, propertyId: number){
+export function readBACNetValue(platform: ExampleHomebridgePlatform, ipAddress: string, net: number, adr: number,
+                                propertyObject:object, propertyId: number){
   return new Promise((resolve, reject) => {
     if (net !== -1 && adr !== -1) {
       const address = {ip: ipAddress, net: net, adr: [adr]};
-      console.info('Reading address ', address, propertyObject, propertyId);
+      platform.log.debug('Reading address', address, propertyObject, propertyId);
       client.readProperty(
         address,
         propertyObject,
@@ -22,6 +22,7 @@ export function readBACNetValue(ipAddress: string, net: number, adr: number, pro
         },
       );
     } else {
+      platform.log.debug('Reading address', ipAddress, propertyObject, propertyId);
       client.readProperty(
         ipAddress,
         propertyObject,
@@ -38,12 +39,14 @@ export function readBACNetValue(ipAddress: string, net: number, adr: number, pro
 }
 
 // eslint-disable-next-line @typescript-eslint/ban-types
-export function writeBACNetValue(ipAddress: string, net: number, adr: number, propertyObject:object, propertyId: number, value,
+export function writeBACNetValue(platform: ExampleHomebridgePlatform, ipAddress: string, net: number, adr: number,
+    propertyObject:object, propertyId: number, value,
   valueType = -1){
   return new Promise((resolve, reject) => {
     const valueObject = generateValueObjectFromValue(value, valueType);
     if (net !== -1 && adr !== -1) {
       const address = {ip: ipAddress, net: net, adr: [adr]};
+      platform.log.debug('Writing address', address, propertyObject, propertyId, ' with ', value, valueType);
       client.writeProperty(
         address,
         propertyObject,
@@ -58,6 +61,7 @@ export function writeBACNetValue(ipAddress: string, net: number, adr: number, pr
         },
       );
     } else {
+      platform.log.debug('Writing address', ipAddress, propertyObject, propertyId, ' with ', value, valueType);
       client.writeProperty(
         ipAddress,
         propertyObject,

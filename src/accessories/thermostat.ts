@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import {PlatformAccessory, Service} from 'homebridge';
-
 import {ExampleHomebridgePlatform} from '../platform';
 import {objectStringParser} from '../bacnet/parser';
 import {readBACNetValue, writeBACNetValue} from '../bacnet/bacnet';
@@ -120,22 +119,23 @@ export class BachomeThermostatAccessory {
    * @param callback Callback from homebridge
    */
   async updateCurrentHeatingCoolingState() {
-    this.platform.log.info('GET CurrentHeatingCoolingState');
+    this.platform.log.debug('GET CurrentHeatingCoolingState', this.accessory.context.device.name);
 
     let valueHeat = 0;
     let valueCool = 0;
 
     // @ts-ignore
     if( -1 != this.stateObjects.currentHeatingState.type) {
-      valueHeat = Number(await readBACNetValue(this.ipAddress, this.net, this.adr, this.stateObjects.currentHeatingState, 85));
+      valueHeat = Number(await readBACNetValue(this.platform, this.ipAddress, this.net, this.adr, this.stateObjects.currentHeatingState, 85));
     };
 
     // @ts-ignore
     if( -1 != this.stateObjects.currentCoolingState.type) {
-      valueCool = Number(await readBACNetValue(this.ipAddress, this.net, this.adr, this.stateObjects.currentCoolingState, 85));
+      valueCool = Number(await readBACNetValue(this.platform, this.ipAddress, this.net, this.adr, this.stateObjects.currentCoolingState, 85));
     };
 
-    this.platform.log.info(`Read currentHeatingCoolingState: Heat: ${String(valueHeat)}, Cool: ${String(valueCool)}`);
+    this.platform.log.info(this.accessory.context.device.name,
+        `currentHeatingCoolingState: Heat: ${String(valueHeat)}, Cool: ${String(valueCool)}`);
 
     if (Number(valueHeat) > 0) {
       this.internalStates.currentHeatingCoolingState = this.platform.Characteristic.TargetHeatingCoolingState.HEAT;
@@ -145,7 +145,8 @@ export class BachomeThermostatAccessory {
       this.internalStates.currentHeatingCoolingState = this.platform.Characteristic.TargetHeatingCoolingState.OFF;
     }
 
-    this.platform.log.info(`currentHeatingCoolingState: ${String(this.internalStates.currentHeatingCoolingState)}`);
+    this.platform.log.debug(this.accessory.context.device.name,
+        `currentHeatingCoolingState: ${String(this.internalStates.currentHeatingCoolingState)}`);
     this.service.updateCharacteristic(
       this.platform.Characteristic.CurrentHeatingCoolingState, this.internalStates.currentHeatingCoolingState,
     );
@@ -157,10 +158,10 @@ export class BachomeThermostatAccessory {
    * @param callback Callback from homebridge
    */
   async updateTargetHeatingCoolingState() {
-    this.platform.log.info('GET TargetHeatingCoolingState');
-    const value = await readBACNetValue(this.ipAddress, this.net, this.adr, this.stateObjects.targetHeatingCoolingState, 85);
+    this.platform.log.debug('GET TargetHeatingCoolingState', this.accessory.context.device.name);
+    const value = await readBACNetValue(this.platform, this.ipAddress, this.net, this.adr, this.stateObjects.targetHeatingCoolingState, 85);
     this.internalStates.targetHeatingCoolingState = this.mapStates.get(Number(value));
-    this.platform.log.info(`Read targetHeatingCoolingState: ${String(value)}`);
+    this.platform.log.info(this.accessory.context.device.name, `targetHeatingCoolingState: ${String(value)}`);
     this.service.updateCharacteristic(
       this.platform.Characteristic.TargetHeatingCoolingState, this.internalStates.targetHeatingCoolingState,
     );
@@ -172,9 +173,9 @@ export class BachomeThermostatAccessory {
    * @param callback Callback from homebridge
    */
   async updateCurrentTemperature() {
-    this.platform.log.info('GET CurrentTemperature');
-    const value = await readBACNetValue(this.ipAddress, this.net, this.adr, this.stateObjects.currentTemperature, 85);
-    this.platform.log.info(`Read currentTemperature: ${String(value)}`);
+    this.platform.log.debug(this.accessory.context.device.name, 'GET CurrentTemperature');
+    const value = await readBACNetValue(this.platform, this.ipAddress, this.net, this.adr, this.stateObjects.currentTemperature, 85);
+    this.platform.log.info(this.accessory.context.device.name, `currentTemperature: ${String(value)}`);
     this.internalStates.currentTemperature = Number(value);
     this.service.updateCharacteristic(this.platform.Characteristic.CurrentTemperature, this.internalStates.currentTemperature);
   }
@@ -185,9 +186,9 @@ export class BachomeThermostatAccessory {
    * @param callback Callback from homebridge
    */
   async updateTargetTemperature() {
-    this.platform.log.info('GET TargetTemperature');
-    const value = await readBACNetValue(this.ipAddress, this.net, this.adr, this.stateObjects.targetTemperature, 85);
-    this.platform.log.info(`Read targetTemperature: ${String(value)}`);
+    this.platform.log.debug(this.accessory.context.device.name, 'GET TargetTemperature');
+    const value = await readBACNetValue(this.platform, this.ipAddress, this.net, this.adr, this.stateObjects.targetTemperature, 85);
+    this.platform.log.info(this.accessory.context.device.name, `targetTemperature: ${String(value)}`);
     this.internalStates.targetTemperature = Number(value);
     this.service.updateCharacteristic(this.platform.Characteristic.TargetTemperature, this.internalStates.targetTemperature);
   }
@@ -199,11 +200,11 @@ export class BachomeThermostatAccessory {
    * @param callback Callback from homebridge
    */
   async setTargetHeatingCoolingState(valueHK, callback) {
-    this.platform.log.info('SET TargetHeatingCoolingState');
+    this.platform.log.debug(this.accessory.context.device.name, 'SET TargetHeatingCoolingState');
     const valueBN = this.reverseMapStates.get(valueHK);
     callback(null);
-    await writeBACNetValue(this.ipAddress, this.net, this.adr,this.stateObjects.targetHeatingCoolingState, 85, valueBN, 2);
-    this.platform.log.info(`Written targetHeatingCoolingState: ${String(valueBN)}`);
+    await writeBACNetValue(this.platform, this.ipAddress, this.net, this.adr,this.stateObjects.targetHeatingCoolingState, 85, valueBN, 2);
+    this.platform.log.info(this.accessory.context.device.name, `targetHeatingCoolingState: ${String(valueBN)}`);
     this.internalStates.targetHeatingCoolingState = valueHK;
   }
 
@@ -215,10 +216,10 @@ export class BachomeThermostatAccessory {
    * @param callback Callback from homebridge
    */
   async setTargetTemperature(value, callback) {
-    this.platform.log.info('SET TargetTemperature');
+    this.platform.log.debug(this.accessory.context.device.name, 'SET TargetTemperature');
     callback(null);
-    await writeBACNetValue(this.ipAddress, this.net, this.adr,this.stateObjects.targetTemperature, 85, value);
-    this.platform.log.info(`Written targetTemperature: ${String(value)}`);
+    await writeBACNetValue(this.platform, this.ipAddress, this.net, this.adr,this.stateObjects.targetTemperature, 85, value);
+    this.platform.log.info(this.accessory.context.device.name, `targetTemperature: ${String(value)}`);
     this.internalStates.targetTemperature = value;
   }
 
@@ -228,7 +229,7 @@ export class BachomeThermostatAccessory {
    * @param callback Callback from homebridge
    */
   getTemperatureDisplayUnits(callback) {
-    this.platform.log.debug('GET TemperatureDisplayUnits');
+    this.platform.log.debug(this.accessory.context.device.name, 'GET TemperatureDisplayUnits');
     callback(null, this.internalStates.temperatureDisplayUnits);
   }
 
@@ -239,7 +240,7 @@ export class BachomeThermostatAccessory {
    * @param callback Callback from homebridge
    */
   setTemperatureDisplayUnits(value, callback) {
-    this.platform.log.debug('SET TemperatureDisplayUnits');
+    this.platform.log.debug(this.accessory.context.device.name, 'SET TemperatureDisplayUnits');
     this.internalStates.temperatureDisplayUnits = value;
     callback(null);
   }
