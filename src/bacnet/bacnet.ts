@@ -16,6 +16,7 @@ export function readBACNetValue(platform: ExampleHomebridgePlatform, ipAddress: 
         propertyId,
         (error, value) => {
           if (error) {
+            platform.log.error('unable to read from BACNet', error);
             return reject(error);
           }
           return resolve(value['values'][0]['value']);
@@ -29,6 +30,7 @@ export function readBACNetValue(platform: ExampleHomebridgePlatform, ipAddress: 
         propertyId,
         (error, value) => {
           if (error) {
+            platform.log.error('unable to read from BACNet', error);
             return reject(error);
           }
           return resolve(value['values'][0]['value']);
@@ -55,6 +57,7 @@ export function writeBACNetValue(platform: ExampleHomebridgePlatform, ipAddress:
         {priority: 8},
         (error, value) => {
           if (error) {
+            platform.log.error('unable to write to BACNet', error);
             return reject(error);
           }
           return resolve(value);
@@ -70,6 +73,7 @@ export function writeBACNetValue(platform: ExampleHomebridgePlatform, ipAddress:
         {priority: 8},
         (error, value) => {
           if (error) {
+            platform.log.error('unable to write to BACNet', error);
             return reject(error);
           }
           return resolve(value);
