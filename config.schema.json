@@ -22,130 +22,136 @@
                             "title": "Name",
                             "type": "string",
                             "placeholder": "e.g. Kitchen",
-                            "required": true
+                            "required": true,
+                            "description": "Used only by Homekit"
                         },
                         "manufacturer": {
                             "title": "Manufacturer",
                             "type": "string",
                             "default": "Manufacturer Name",
-                            "required": true
+                            "required": true,
+                            "description": "Used only by Homekit"
                         },
                         "model": {
                             "title": "Model",
                             "type": "string",
                             "default": "Model Name",
-                            "required": true
+                            "required": true,
+                            "description": "Used only by Homekit"
                         },
                         "serial": {
                             "title": "Serial number",
                             "type": "string",
                             "required": true,
                             "placeholder": "bachome-bbmd-thermostat-001",
-                            "description": "Must be unique in this configuration"
+                            "description": "Used only by Homekit, must be unique for each accessory instance"
                         },
                         "ipAddress": {
-                            "title": "IP Address",
+                            "title": "BACNet IP Address",
                             "type": "string",
                             "required": true,
-                            "placeholder": "10.10.14.30"
+                            "placeholder": "10.10.14.30",
+                            "description": "ip address of the BACnet device, or BACnet BBMD router"
                         },
                         "net": {
-                            "title": "Net Address",
+                            "title": "BACNet Net number",
                             "type": "number",
                             "required": true,
                             "placeholder": -1,
-                            "description": "If set, then adr must also be set, and will use BBMD"
+                            "description": "If not -1, then adr must also be set, and will use BBMD"
                         },
                         "adr": {
-                            "title": "MAC Address",
+                            "title": "BACNet MAC Address",
                             "type": "number",
                             "required": true,
                             "placeholder": -1,
-                            "description": "If set, then net must also be set, and will use BBMD"
+                            "description": "If not -1, then net must also be set, and will use BBMD"
                         },
                         "currentHeatingState": {
-                            "title": "Current Heating State Object",
+                            "title": "BACNet Current Heating State Object",
                             "type": "string",
                             "required": true,
-                            "placeholder": "BO:1"
+                            "placeholder": "BO:1",
+                            "description": "the object that records whether heating is active"
                         },
                         "currentCoolingState": {
-                            "title": "Current Cooling State Object",
+                            "title": "BACNet Current Cooling State Object",
                             "type": "string",
                             "required": true,
-                            "placeholder": "AO:3"
+                            "placeholder": "AO:3",
+                            "description": "the object that records whether cooling is active"
                         },
                         "targetHeatingCoolingState": {
-                            "title": "Target State Object",
+                            "title": "BACNet Target State Object",
                             "type": "string",
                             "required": true,
                             "placeholder": "MSV:618",
-                            "description": "Must be a writeable BACnet object"
+                            "description": "the object that records current thermostat state, see StateValue settings below"
                         },
                         "currentTemperature": {
-                            "title": "Current Temperature Object",
+                            "title": "BACNet Current Temperature Object",
                             "type": "string",
                             "required": true,
                             "placeholder": "AI:700"
                         },
                         "targetTemperature": {
-                            "title": "Target Temperature Object",
+                            "title": "BACNet Target Temperature Object",
                             "type": "string",
                             "required": true,
                             "placeholder": "AV:300",
                             "description": "Must be a writeable BACnet object"
                         },
                         "minTemp": {
-                            "title": "Min Temp",
+                            "title": "Homebridge Min Temp",
                             "type": "number",
                             "required": true,
                             "placeholder": 18,
                             "description": "min allowed temp"
                         },
                         "maxTemp": {
-                            "title": "Max Temp",
+                            "title": "Homebridge Max Temp",
                             "type": "number",
                             "required": true,
                             "placeholder": 30,
                             "description": "max allowed temp"
                         },
                         "minStep": {
-                            "title": "Min Step",
+                            "title": "Homebridge Min Step",
                             "type": "number",
                             "required": true,
                             "placeholder": 0.5,
                             "description": "min allowed temp step"
                         },
                         "pollFrequency": {
-                            "title": "Polling Frequency",
+                            "title": "Homebridge Polling Frequency",
                             "type": "number",
                             "required": true,
                             "placeholder": 5,
                             "description": "update status this frequently, seconds"
                         },
                         "targetHeatOnlyStateValue": {
-                            "title": "Heat Only State Value",
+                            "title": "BACNet Heat Only State Value",
                             "type": "number",
                             "required": true,
                             "placeholder": 1,
                             "description": "the value stored by the BACNet device in targetHeatingCoolingState"
                         },
                         "targetCoolOnlyStateValue": {
-                            "title": "Cool Only State Value",
+                            "title": "BACNet Cool Only State Value",
                             "type": "number",
                             "required": true,
                             "placeholder": 4,
                             "description": "the value stored by the BACNet device in targetHeatingCoolingState"
                         },
                         "targetAutoStateValue": {
-                            "title": "Auto State Value",
+                            "title": "BACNet Auto State Value",
                             "type": "number",
                             "required": true,
                             "placeholder": 3,
                             "description": "the value stored by the BACNet device in targetHeatingCoolingState"
                         },
                         "targetOffStateValue": {
-                            "title": "Off State Value",
+                            "title": "BACNet Off State Value",
                             "type": "number",
                             "required": true,
                             "placeholder": 2,

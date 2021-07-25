@@ -7,9 +7,43 @@
 
 ![Build and Lint](https://github.com/Caserage/bachome/workflows/Build%20and%20Lint/badge.svg)
 
-# BAChome BBMD
+# Bachome BBMD
 
-An extension of bachome, which adds BBMD support using natezimmer_bacstack
+An extension of bachome, which adds BBMD support using natezimmer_bacstack.  Currently only the homebridge thermostat is supported.
+
+BACnet is a standard used for Building Automation Systems.  There's a guide to it here: https://guides.smartbuildingsacademy.com/definitive-guide-bacnet
+
+The hardware I wanted to get working in homebridge uses BBMD (BACnet Broadcast Management Device), which means a device on a regular IP network that facilitates routing to a separate BACnet network.  To make it work, homebridge needs to know how to address BACnet addresses via the router.  natezimmer-bacstack adds this capability to bacstack (the underlying BACnet service used by bachome).
+
+To use BBMD here, you need to configure:
+
+<ul>
+<li>IP address of the BBMD router</li>
+<li>Target BACnet network ID on the router</li>
+<li>Target BACnet MAC address of the end device</li>
+<li>Target object specifications on the BACnet end device, which govern the thermostat</li>
+</ul>
+
+In bachome, target object specifications are string values, each 2 tokens separated by ":".  The first value is shorthand for the object value type (see list below).  The second is the object ID.  Eg, "AV:16" means an AnalogValue object with ID 16.
+
+<ul>
+<li>AI: AnalogInput</li>
+<li>AO: AnalogOutput</li>
+<li>AV: AnalogValue</li>
+<li>BI: BinaryInput</li>
+<li>BO: BinaryOutput</li>
+<li>BV: BinaryValue</li>
+<li>MSV: MultiStatealue</li>
+</ul>
+
+If you don't know what values to configure, you'd need to explore your network with something like Cimetrics BACnet Explorer, for which there is a free version here: https://www.cimetrics.com/collections/bacnet/products/bacnet-explorer
+
+The config schema has descriptions and sample values.  These features should work, but not tested -
+
+<ul>
+<li>Set a target state object spec to an empty string to ignore it</li>
+<li>Set both net and adr to -1, to disable BBMD (ie treat the target IP as the end BACNet device </li>
+</ul>
 
 ## Configuring the plugin
 

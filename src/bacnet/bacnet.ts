@@ -42,8 +42,7 @@ export function readBACNetValue(platform: ExampleHomebridgePlatform, ipAddress: 
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 export function writeBACNetValue(platform: ExampleHomebridgePlatform, ipAddress: string, net: number, adr: number,
-    propertyObject:object, propertyId: number, value,
-  valueType = -1){
+                                 propertyObject:object, propertyId: number, value:number, valueType:number){
   return new Promise((resolve, reject) => {
     const valueObject = generateValueObjectFromValue(value, valueType);
     if (net !== -1 && adr !== -1) {
@@ -92,37 +91,27 @@ export function writeBACNetValue(platform: ExampleHomebridgePlatform, ipAddress:
 export function generateValueObjectFromValue(value, valueType:number) {
   const valueObject: unknown[] = [];
 
-  if(-1 !== valueType){
-    valueObject[0]={type: valueType, value: value};
+  if(-1 !== valueType) {
+    valueObject[0] = {value: value, type: valueType};
   } else {
     switch (typeof value) {
       case 'number':
-        valueObject[0] = {
-          type: 4,
-          value: value,
-        };
+        valueObject[0] = {value: value, type:4}; // real number
         break;
 
       case 'boolean':
-        valueObject[0] = {
-          type: 9,
-          // Bacnet uses 0 and 1 instead of false and true
-          value: value,
-        };
+        // Bacnet uses 0 and 1 instead of false and true
+        valueObject[0] = {value: value, type:9}; // enumerated
         break;
 
       case 'string':
-        valueObject[0] = {
-          type:
-          7,
-          value: value,
-        };
+        valueObject[0] = {value: value, type:7}; // character string
         break;
 
       default:
         break;
     }
   }
- 
+
   return valueObject;
 }

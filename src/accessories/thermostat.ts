@@ -86,33 +86,80 @@ export class BachomeThermostatAccessory {
         minStep: this.accessory.context.device.maxStep
       });
 
-    this.Poll(this.updateCurrentHeatingCoolingState.bind(this), this.accessory.context.device.pollFrequency * 1000);
-    this.Poll(this.updateTargetHeatingCoolingState.bind(this), this.accessory.context.device.pollFrequency * 1000);
-    this.Poll(this.updateCurrentTemperature.bind(this), this.accessory.context.device.pollFrequency * 1000);
-    this.Poll(this.updateTargetTemperature.bind(this), this.accessory.context.device.pollFrequency * 1000);
+    this.poll(this.updateCurrentHeatingCoolingState.bind(this), this.accessory.context.device.pollFrequency * 1000);
+    this.poll(this.updateTargetHeatingCoolingState.bind(this), this.accessory.context.device.pollFrequency * 1000);
+    this.poll(this.updateCurrentTemperature.bind(this), this.accessory.context.device.pollFrequency * 1000);
+    this.poll(this.updateTargetTemperature.bind(this), this.accessory.context.device.pollFrequency * 1000);
 
-    this.mapStates = new Map();
-    this.mapStates.set(this.accessory.context.device.targetHeatOnlyStateValue, this.platform.Characteristic.TargetHeatingCoolingState.HEAT);
-    this.mapStates.set(this.accessory.context.device.targetCoolOnlyStateValue, this.platform.Characteristic.TargetHeatingCoolingState.COOL);
-    this.mapStates.set(this.accessory.context.device.targetAutoStateValue, this.platform.Characteristic.TargetHeatingCoolingState.AUTO);
-    this.mapStates.set(this.accessory.context.device.targetOffStateValue, this.platform.Characteristic.TargetHeatingCoolingState.OFF);
+    this.mapStates = new Map([
+        [ this.accessory.context.device.targetHeatOnlyStateValue, this.platform.Characteristic.TargetHeatingCoolingState.HEAT ],
+        [ this.accessory.context.device.targetCoolOnlyStateValue, this.platform.Characteristic.TargetHeatingCoolingState.COOL ],
+        [ this.accessory.context.device.targetAutoStateValue, this.platform.Characteristic.TargetHeatingCoolingState.AUTO ],
+        [ this.accessory.context.device.targetOffStateValue, this.platform.Characteristic.TargetHeatingCoolingState.OFF ]
+    ]);
 
-    this.reverseMapStates = new Map();
-    this.reverseMapStates.set(this.platform.Characteristic.TargetHeatingCoolingState.HEAT, this.accessory.context.device.targetHeatOnlyStateValue);
-    this.reverseMapStates.set(this.platform.Characteristic.TargetHeatingCoolingState.COOL, this.accessory.context.device.targetCoolOnlyStateValue);
-    this.reverseMapStates.set(this.platform.Characteristic.TargetHeatingCoolingState.AUTO, this.accessory.context.device.targetAutoStateValue);
-    this.reverseMapStates.set(this.platform.Characteristic.TargetHeatingCoolingState.OFF, this.accessory.context.device.targetOffStateValue);
+    this.reverseMapStates = new Map([
+        [ this.platform.Characteristic.TargetHeatingCoolingState.HEAT, this.accessory.context.device.targetHeatOnlyStateValue ],
+        [ this.platform.Characteristic.TargetHeatingCoolingState.COOL, this.accessory.context.device.targetCoolOnlyStateValue ],
+        [ this.platform.Characteristic.TargetHeatingCoolingState.AUTO, this.accessory.context.device.targetAutoStateValue ],
+        [ this.platform.Characteristic.TargetHeatingCoolingState.OFF, this.accessory.context.device.targetOffStateValue ]
+    ]);
   }
 
   /**
    * sets up polling using the input function
    */
-  Poll(fn, frequency) {
+  poll(fn, frequency) {
     async function run() {
       await fn();
       setTimeout(run, frequency);
     }
     run();
+  }
+
+  /*
+   * read the specified value from BACNet and return it
+   * update internal state with the read value
+   * Returns defaultVal if there's a problem
+   * optionally round to precision
+   */
+  async getBACNetValue(name:string, defaultVal:number, precision=-1) {
+    let value = defaultVal;
+
+    try {
+      // @ts-ignore
+      if (-1 !== this.stateObjects[name].type) {
+        value = Number(await readBACNetValue(this.platform, this.ipAddress, this.net, this.adr, this.stateObjects[name], 85));
+
+        if(precision != -1){
+          value = parseFloat(value.toFixed(precision));
+        }
+      }
+    } catch (err) {
+      this.platform.log.error(this.accessory.context.device.name, 'unable to read BACNet', name, err.message);
+    }
+
+    if (this.internalStates[name] != value) {
+      this.platform.log.info(this.accessory.context.device.name, name, 'value read: ', String(value));
+      this.internalStates[name] = value;
+    }
+
+    return (value);
+  }
+
+  /*
+   * write the specified value to BACNet
+   * update internal state
+   */
+  async setBACNetValue(name:string, value:number, valueType:number) {
+    try {
+      await writeBACNetValue(this.platform, this.ipAddress, this.net, this.adr, this.stateObjects[name], 85, value, valueType);
+      this.platform.log.info(this.accessory.context.device.name, name, "updated to:", String(value));
+      this.internalStates[name] = value;
+    }
+    catch(err){
+      this.platform.log.error(this.accessory.context.device.name, 'unable to write BACNet', name, String(value), err.message);
+    }
   }
 
   /**
@@ -122,29 +169,13 @@ export class BachomeThermostatAccessory {
    */
   async updateCurrentHeatingCoolingState() {
     this.platform.log.debug('GET CurrentHeatingCoolingState', this.accessory.context.device.name);
-    let valueHeat = 0;
-    let valueCool = 0;
 
-    try {
-      // @ts-ignore
-      if (-1 !== this.stateObjects.currentHeatingState.type) {
-        valueHeat = Number(await readBACNetValue(this.platform, this.ipAddress, this.net, this.adr, this.stateObjects.currentHeatingState, 85));
-      }
-      // @ts-ignore
-      if (-1 !== this.stateObjects.currentCoolingState.type) {
-        valueCool = Number(await readBACNetValue(this.platform, this.ipAddress, this.net, this.adr, this.stateObjects.currentCoolingState, 85));
-      }
-    }
-    catch(err){
-      this.platform.log.error(this.accessory.context.device.name, 'unable to read BN currentHeatingCoolingState', err.message);
-    }
+    const priorValueHeat = this.internalStates.currentHeatingState;
+    const priorValueCool = this.internalStates.currentCoolingState;
+    let valueHeat = Number(await this.getBACNetValue("currentHeatingState", 0));
+    let valueCool = Number(await this.getBACNetValue("currentCoolingState", 0));
 
-    if(this.internalStates.currentHeatingState != valueHeat || this.internalStates.currentCoolingState != valueCool) {
-      this.platform.log.info(this.accessory.context.device.name,
-          `currentHeatingCoolingState: Heat: ${String(valueHeat)}, Cool: ${String(valueCool)}`);
-      this.internalStates.currentHeatingState = valueHeat;
-      this.internalStates.currentCoolingState = valueCool;
-
+    if(priorValueHeat != valueHeat || priorValueCool != valueCool) {
       if (Number(valueHeat) > 0) {
         this.internalStates.currentHeatingCoolingState = this.platform.Characteristic.CurrentHeatingCoolingState.HEAT;
       } else if (Number(valueCool) > 0) {
@@ -152,7 +183,6 @@ export class BachomeThermostatAccessory {
       } else {
         this.internalStates.currentHeatingCoolingState = this.platform.Characteristic.CurrentHeatingCoolingState.OFF;
       }
-
       this.platform.log.debug(this.accessory.context.device.name, `currentHeatingCoolingState: ${String(this.internalStates.currentHeatingCoolingState)}`);
       this.service.updateCharacteristic(this.platform.Characteristic.CurrentHeatingCoolingState, this.internalStates.currentHeatingCoolingState);
     }
@@ -165,20 +195,13 @@ export class BachomeThermostatAccessory {
    */
   async updateTargetHeatingCoolingState() {
     this.platform.log.debug('GET TargetHeatingCoolingState', this.accessory.context.device.name);
-    let valueHK = this.platform.Characteristic.TargetHeatingCoolingState.OFF;
 
-    try {
-      const valueBN = await readBACNetValue(this.platform, this.ipAddress, this.net, this.adr, this.stateObjects.targetHeatingCoolingState, 85);
-      valueHK = this.mapStates.get(Number(valueBN));
-    }
-    catch(err){
-      this.platform.log.error(this.accessory.context.device.name, 'unable to read BN targetHeatingCoolingState', err.message);
-    }
+    const priorValue = this.internalStates.targetHeatingCoolingState
+    let value = Number(await this.getBACNetValue("targetHeatingCoolingState", -1));
 
-    if(valueHK != this.internalStates.targetHeatingCoolingState) {
-      this.platform.log.info(this.accessory.context.device.name, `targetHeatingCoolingState: ${String(valueHK)}`);
-      this.internalStates.targetHeatingCoolingState = valueHK;
-      this.service.updateCharacteristic(this.platform.Characteristic.TargetHeatingCoolingState, this.internalStates.targetHeatingCoolingState);
+    if(value != priorValue) {
+      let valueHK = this.mapStates.has(value) ? this.mapStates.get(value) : this.platform.Characteristic.TargetHeatingCoolingState.OFF;
+      this.service.updateCharacteristic(this.platform.Characteristic.TargetHeatingCoolingState, valueHK);
     }
   }
 
@@ -189,19 +212,13 @@ export class BachomeThermostatAccessory {
    */
   async updateCurrentTemperature() {
     this.platform.log.debug(this.accessory.context.device.name, 'GET CurrentTemperature');
-    let value = this.accessory.context.device.minTemp;
-    try {
-      value = Number(await readBACNetValue(this.platform, this.ipAddress, this.net, this.adr, this.stateObjects.currentTemperature, 85));
-      value = Math.min(this.accessory.context.device.maxTemp,Math.max(this.accessory.context.device.minTemp,value));
-    }
-    catch(err){
-      this.platform.log.error(this.accessory.context.device.name, 'unable to read BN currentTemperature', err.message);
-    }
 
-    if(this.internalStates.currentTemperature != value) {
-      this.platform.log.info(this.accessory.context.device.name, `currentTemperature: ${String(value)}`);
-      this.internalStates.currentTemperature = value;
-      this.service.updateCharacteristic(this.platform.Characteristic.CurrentTemperature, this.internalStates.currentTemperature);
+    const priorValue = this.internalStates.currentTemperature;
+    let value = Number(await this.getBACNetValue("currentTemperature", this.accessory.context.device.minTemp, 1));
+    value = Math.min(this.accessory.context.device.maxTemp,Math.max(this.accessory.context.device.minTemp,value));
+
+    if(priorValue != value) {
+      this.service.updateCharacteristic(this.platform.Characteristic.CurrentTemperature, value);
     }
   }
 
@@ -212,20 +229,13 @@ export class BachomeThermostatAccessory {
    */
   async updateTargetTemperature() {
     this.platform.log.debug(this.accessory.context.device.name, 'GET TargetTemperature');
-    let value = this.accessory.context.device.minTemp;
 
-    try {
-      value = Number(await readBACNetValue(this.platform, this.ipAddress, this.net, this.adr, this.stateObjects.targetTemperature, 85));
-      value = Math.min(this.accessory.context.device.maxTemp, Math.max(this.accessory.context.device.minTemp, value));
-    }
-    catch(err){
-      this.platform.log.error(this.accessory.context.device.name, 'unable to read BN targetTemperature', err.message);
-    }
+    const priorValue = this.internalStates.targetTemperature;
+    let value = Number(await this.getBACNetValue("targetTemperature", this.accessory.context.device.minTemp));
+    value = Math.min(this.accessory.context.device.maxTemp,Math.max(this.accessory.context.device.minTemp,value));
 
-    if(value != this.internalStates.targetTemperature) {
-      this.platform.log.info(this.accessory.context.device.name, `targetTemperature: ${String(value)}`);
-      this.internalStates.targetTemperature = value;
-      this.service.updateCharacteristic(this.platform.Characteristic.TargetTemperature, this.internalStates.targetTemperature);
+    if(priorValue != value) {
+      this.service.updateCharacteristic(this.platform.Characteristic.TargetTemperature, value);
     }
   }
   /**
@@ -237,15 +247,11 @@ export class BachomeThermostatAccessory {
    */
   async setTargetHeatingCoolingState(valueHK, callback) {
     this.platform.log.debug(this.accessory.context.device.name, 'SET TargetHeatingCoolingState');
-    try {
+    callback(null);
+
+    if(this.reverseMapStates.has(valueHK)){
       const valueBN = this.reverseMapStates.get(valueHK);
-      callback(null);
-      await writeBACNetValue(this.platform, this.ipAddress, this.net, this.adr, this.stateObjects.targetHeatingCoolingState, 85, valueBN, 2);
-      this.platform.log.info(this.accessory.context.device.name, `targetHeatingCoolingState: ${String(valueBN)}`);
-      this.internalStates.targetHeatingCoolingState = valueHK;
-    }
-    catch(err){
-      this.platform.log.error(this.accessory.context.device.name, 'unable to write HK targetHeatingCoolingState', err.message);
+      await this.setBACNetValue("targetHeatingCoolingState", valueBN, 2); // valueType 2 = Unsigned integer. may need to make configurable
     }
   }
 
@@ -258,15 +264,8 @@ export class BachomeThermostatAccessory {
    */
   async setTargetTemperature(value, callback) {
     this.platform.log.debug(this.accessory.context.device.name, 'SET TargetTemperature');
-    try {
-      callback(null);
-      await writeBACNetValue(this.platform, this.ipAddress, this.net, this.adr, this.stateObjects.targetTemperature, 85, value);
-      this.platform.log.info(this.accessory.context.device.name, `targetTemperature: ${String(value)}`);
-      this.internalStates.targetTemperature = value;
-    }
-    catch(err){
-      this.platform.log.error(this.accessory.context.device.name, 'unable to write HK targetTemperature', err.message);
-    }
+    callback(null);
+    await this.setBACNetValue("targetTemperature", value, 4);// valueType 4 = Real number. may need to make configurable
   }
 
   /**
